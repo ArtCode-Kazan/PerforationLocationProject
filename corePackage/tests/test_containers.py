@@ -9,7 +9,7 @@ from helpers import generate_layers, generate_stations
 class TestObservationSystem:
     def test_base_altitude(self):
         stations = generate_stations()
-        altitudes = [x.altitude for x in stations]
+        altitudes = [x.coordinate.altitude for x in stations]
         observation_system = ObservationSystem(
             stations=stations
         )

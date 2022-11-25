@@ -3,22 +3,25 @@
 from random import randint
 from typing import List
 
-from core.containers import Coordinate, Interval, Layer
+from core.containers import Coordinate, Interval, Layer, Station
 
 
-def generate_stations() -> List[Coordinate]:
+def generate_stations() -> List[Station]:
     """Return list of random stations.
 
     Returns: list of stations
 
     """
     stations = []
-    for _ in range(randint(1, 100)):
+    for i in range(randint(1, 100)):
         stations.append(
-            Coordinate(
-                x=randint(-1000, 1000),
-                y=randint(-1000, 1000),
-                altitude=randint(-200, 200)
+            Station(
+                number=i + 1,
+                coordinate=Coordinate(
+                    x=randint(-1000, 1000),
+                    y=randint(-1000, 1000),
+                    altitude=randint(-200, 200)
+                )
             )
         )
     return stations

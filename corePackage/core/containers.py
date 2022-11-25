@@ -10,7 +10,7 @@ from typing import List, Tuple
 
 @dataclass
 class Coordinate:
-    """Container with station coordinate.
+    """Container with coordinate.
 
     Args:
         x: x-coordinate
@@ -25,6 +25,19 @@ class Coordinate:
 
 
 @dataclass
+class Station:
+    """Container with station info.
+
+    Args:
+        number: station number
+        coordinate: station coordinate
+
+    """
+    number: int
+    coordinate: Coordinate
+
+
+@dataclass
 class ObservationSystem:
     """Container for saving observation stations.
 
@@ -33,7 +46,7 @@ class ObservationSystem:
 
     """
 
-    stations: List[Coordinate]
+    stations: List[Station]
 
     @property
     def base_altitude(self) -> float:
@@ -42,7 +55,16 @@ class ObservationSystem:
         Returns: minimal altitude
 
         """
-        return min((x.altitude for x in self.stations))
+        return min((x.coordinate.altitude for x in self.stations))
+
+    @property
+    def stations_count(self) -> int:
+        """Return stations count.
+
+        Returns: stations count
+
+        """
+        return len(self.stations)
 
 
 class Interval:
@@ -245,3 +267,16 @@ class Model:
             total_time += thickness / layer.vp
             total_thickness += thickness
         return total_thickness / total_time
+
+
+@dataclass
+class Correction:
+    """Container with description Correction class.
+
+    Args:
+        station_number: station number
+        value: correction value
+
+    """
+    station_number: int
+    value: float
