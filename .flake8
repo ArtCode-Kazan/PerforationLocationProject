@@ -3,5 +3,5 @@ inline-quotes = '
 ignore = ANN101, D104
 exclude = .git,__pycache__,.pytest_cache,build,dist,venv
 per-file-ignores =
-    corePackage/tests/*: D, ANN
-    server/tests/*: D, ANN
+    perforation-core/tests/*: D, ANN
+    perforation-server/tests/*: D, ANN
