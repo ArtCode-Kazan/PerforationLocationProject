@@ -90,7 +90,8 @@ class TestObservationSystem:
         py_model = PyObservationSystem(stations=py_stations)
         assert_that(
             actual_or_assertion=ObservationSystem.from_pymodel(
-                model=py_model),
+                model=py_model
+            ),
             matcher=equal_to(obj)
         )
 

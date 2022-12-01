@@ -35,7 +35,7 @@ class StaticCorrection:
     def model(self) -> VelocityModel:
         """Return velocity model class.
 
-        Returns:Model class
+        Returns: Model class
 
         """
         return self.__model
