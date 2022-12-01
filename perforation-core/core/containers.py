@@ -3,9 +3,13 @@
 This module organize information about objects.
 
 """
+from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import List, Tuple
+
+from core.models import (PyCoordinate, PyInterval, PyLayer,
+                         PyObservationSystem, PyStation, PyVelocityModel)
 
 
 @dataclass
@@ -23,6 +27,38 @@ class Coordinate:
     y: float
     altitude: float
 
+    @property
+    def tuple_view(self) -> Tuple[float, float, float]:
+        """Return tuple class representation.
+
+        Returns: tuple with x, y, altitude values
+
+        """
+        return self.x, self.y, self.altitude
+
+    @classmethod
+    def from_pymodel(cls, model: PyCoordinate) -> Coordinate:
+        """Help create class from Pydantic model.
+
+        Args:
+            model: PyCoordinate class
+
+        Returns: Coordinate class
+
+        """
+        return cls(x=model.x, y=model.y, altitude=model.altitude)
+
+    def __eq__(self, other: Coordinate) -> bool:
+        """Check equality of objects.
+
+        Args:
+            other: Coordinate class
+
+        Returns: True if equal else False if not
+
+        """
+        return self.tuple_view == other.tuple_view
+
 
 @dataclass
 class Station:
@@ -30,11 +66,50 @@ class Station:
 
     Args:
         number: station number
-        coordinate: station coordinate
+        coordinate: Coordinate class with station coordinate
 
     """
+
     number: int
     coordinate: Coordinate
+
+    @property
+    def tuple_view(self) -> Tuple[int, float, float, float]:
+        """Return tuple class representation.
+
+        Returns: tuple with station number and coordinates
+
+        """
+        return (
+            self.number, self.coordinate.x, self.coordinate.y,
+            self.coordinate.altitude
+        )
+
+    @classmethod
+    def from_pymodel(cls, model: PyStation) -> Station:
+        """Help create class from Pydantic model.
+
+        Args:
+            model: PyStation class
+
+        Returns: Station class
+
+        """
+        return cls(
+            number=model.number,
+            coordinate=Coordinate.from_pymodel(model=model.coordinate)
+        )
+
+    def __eq__(self, other: Station) -> bool:
+        """Check equality of objects.
+
+        Args:
+            other: Station class
+
+        Returns: True if equal else False if not
+
+        """
+        return self.tuple_view == other.tuple_view
 
 
 @dataclass
@@ -47,6 +122,19 @@ class ObservationSystem:
     """
 
     stations: List[Station]
+
+    @classmethod
+    def from_pymodel(cls, model: PyObservationSystem) -> ObservationSystem:
+        """Help create class from Pydantic model.
+
+        Args:
+            model: PyObservationSystem class
+
+        Returns: ObservationSystem class
+
+        """
+        stations = [Station.from_pymodel(model=x) for x in model.stations]
+        return cls(stations=stations)
 
     @property
     def base_altitude(self) -> float:
@@ -66,6 +154,22 @@ class ObservationSystem:
         """
         return len(self.stations)
 
+    def __eq__(self, other: ObservationSystem) -> bool:
+        """Check equality of objects.
+
+        Args:
+            other: ObservationSystem class
+
+        Returns: True if equal else False if not
+
+        """
+        if self.stations_count != other.stations_count:
+            return False
+        for i in range(self.stations_count):
+            if self.stations[i] != other.stations[i]:
+                return False
+        return True
+
 
 class Interval:
     """Container for Interval abstraction."""
@@ -83,6 +187,18 @@ class Interval:
 
         self.min_val = min_val
         self.max_val = max_val
+
+    @classmethod
+    def from_pymodel(cls, model: PyInterval) -> Interval:
+        """Help create class from Pydantic model.
+
+        Args:
+            model: PyInterval class
+
+        Returns: Interval class
+
+        """
+        return cls(min_val=model.min_val, max_val=model.max_val)
 
     @property
     def tuple_view(self) -> Tuple[float, float]:
@@ -111,6 +227,17 @@ class Interval:
         """
         return (self.max_val + self.min_val) / 2
 
+    def __eq__(self, other: Interval) -> bool:
+        """Check equality of objects.
+
+        Args:
+            other: Interval class
+
+        Returns: True if equal else False if not
+
+        """
+        return self.tuple_view == other.tuple_view
+
 
 @dataclass
 class Layer:
@@ -124,6 +251,23 @@ class Layer:
 
     altitude_interval: Interval
     vp: float
+
+    @classmethod
+    def from_pymodel(cls, model: PyLayer) -> Layer:
+        """Help create class from Pydantic model.
+
+        Args:
+            model: PyLayer class
+
+        Returns: Layer class
+
+        """
+        return cls(
+            altitude_interval=Interval.from_pymodel(
+                model=model.altitude_interval
+            ),
+            vp=model.vp
+        )
 
     @property
     def thickness(self) -> float:
@@ -161,8 +305,26 @@ class Layer:
         interval = self.altitude_interval
         return f'interval={interval.max_val}/{interval.min_val} v={self.vp}'
 
+    def __eq__(self, other: Layer) -> bool:
+        """Check equality of objects.
 
-class Model:
+        Args:
+            other: Layer class
+
+        Returns: True if equal else False if not
+
+        """
+        origin_tuple_view = self.altitude_interval.tuple_view
+        other_tuple_view = other.altitude_interval.tuple_view
+        if origin_tuple_view != other_tuple_view:
+            return False
+
+        if self.vp != other.vp:
+            return False
+        return True
+
+
+class VelocityModel:
     """Class with Model description."""
 
     def __init__(self, layers: List[Layer]):
@@ -177,6 +339,19 @@ class Model:
 
         layers.sort(key=lambda x: x.altitude_interval.max_val, reverse=True)
         self.__layers = layers
+
+    @classmethod
+    def from_pymodel(cls, model: PyVelocityModel) -> VelocityModel:
+        """Help create class from Pydantic model.
+
+        Args:
+            model: PyVelocityModel class
+
+        Returns: VelocityModel class
+
+        """
+        layers = [Layer.from_pymodel(model=x) for x in model.layers]
+        return cls(layers=layers)
 
     @property
     def layers(self) -> List[Layer]:
@@ -268,6 +443,23 @@ class Model:
             total_thickness += thickness
         return total_thickness / total_time
 
+    def __eq__(self, other: VelocityModel) -> bool:
+        """Check equality of objects.
+
+        Args:
+            other: VelocityModel class
+
+        Returns: True if equal else False if not
+
+        """
+        if len(self.layers) != len(other.layers):
+            return False
+
+        for i in range(len(self.layers)):
+            if self.layers[i] != other.layers[i]:
+                return False
+        return True
+
 
 @dataclass
 class Correction:
@@ -278,5 +470,6 @@ class Correction:
         value: correction value
 
     """
+
     station_number: int
     value: float
