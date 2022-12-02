@@ -107,7 +107,8 @@ class TestInterval:
         )
 
     @pytest.mark.parametrize(
-        argnames=['min_val', 'max_val'], argvalues=[(10, 0)])
+        argnames=['min_val', 'max_val'], argvalues=[(10, 0)]
+    )
     def test_invalid_input(self, min_val, max_val):
         try:
             Interval(min_val=min_val, max_val=max_val)
