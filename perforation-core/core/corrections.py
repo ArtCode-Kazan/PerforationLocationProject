@@ -2,13 +2,15 @@
 
 from typing import Dict, List
 
-from core.containers import Correction, Interval, Model, ObservationSystem
+from core.containers import (Correction, Interval, ObservationSystem,
+                             VelocityModel)
 
 
 class StaticCorrection:
     """Container with description static correction."""
 
-    def __init__(self, observation_system: ObservationSystem, model: Model):
+    def __init__(self, observation_system: ObservationSystem,
+                 model: VelocityModel):
         """Initialize class method.
 
         Args:
@@ -30,13 +32,13 @@ class StaticCorrection:
         return self.__observation_system
 
     @property
-    def model(self) -> Model:
+    def model(self) -> VelocityModel:
         """Return velocity model class.
 
-        Returns:Model class
+        Returns: Model class
 
         """
-        return self.model
+        return self.__model
 
     @property
     def corrections(self) -> List[Correction]:
@@ -64,13 +66,15 @@ class StaticCorrection:
 
         """
         corrections = {}
-        for station_id, station in enumerate(self.observation_system.stations):
+        stations = self.observation_system.stations
+        for station_id, station in enumerate(stations):
             altitude_interval = Interval(
                 min_val=self.observation_system.base_altitude,
                 max_val=station.coordinate.altitude
             )
-            correction_value = self.model.get_interval_velocity(
+            interval_velocity = self.model.get_interval_velocity(
                 altitude_interval=altitude_interval
             )
-            corrections[station_id] = correction_value
+            time_value = altitude_interval.length / interval_velocity
+            corrections[station_id] = time_value
         return corrections
